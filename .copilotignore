@@ -1,0 +1,17 @@
+# Environment files with sensitive data
+.env
+.env.*
+**/secrets/*
+
+# Large data files
+*.csv
+*.json
+*.xml
+*.xlsx
+*.parquet
+
+# Generated files
+**/node_modules/*
+**/dist/*
+**/build/*
+**/__pycache__/*
