@@ -1,7 +1,9 @@
 import os
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
+from langchain_ollama import ChatOllama
 from langchain_community.chat_models import ChatYandexGPT
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 
@@ -9,13 +11,22 @@ load_dotenv()
 
 
 def main():
-    print("Starting DeepSeek example...")
+    print("Starting Hello world project...")
 
+    # llm = ChatGoogleGenerativeAI(
+    #     model="gemini-2.5-flash",
+    #     temperature=0,
+    #     max_retries=2,
+    # )
     llm = ChatYandexGPT(
         folder_id=os.getenv("YC_FOLDER"),
         temperature=0.3,
         model_name="yandexgpt-5-lite"
     )
+    # llm = ChatOllama(
+    #     temperature=0.3,
+    #     model="gemma3:270m"
+    # )
 
     information = """
     Jeff Bezos is an American entrepreneur and investor best known as the founder and former CEO of Amazon, the world's largest online retailer.
@@ -23,7 +34,7 @@ def main():
     Bezos is recognized for revolutionizing e-commerce and cloud computing, and is one of the wealthiest individuals globally.
     """
 
-    task = "Describe the person in a short sentence. List two piculiar facts about him."
+    task = "Describe the person in a short sentence. And provide a numeric list with two piculiar facts about him."
 
     template = "Given the information {information} about a person, implement the task: {task}"
     prompt_template = PromptTemplate(
