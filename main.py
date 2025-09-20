@@ -1,10 +1,17 @@
+"""
+This script demonstrates how to use LangChain with YandexGPT to process information
+and generate responses based on a given prompt.
+"""
+
 import os
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
-from langchain_ollama import ChatOllama
+
+# from langchain_ollama import ChatOllama
 from langchain_community.chat_models import ChatYandexGPT
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, SystemMessage
+
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_core.messages import HumanMessage, SystemMessage
 
 
 load_dotenv()
@@ -18,11 +25,7 @@ def main():
     #     temperature=0,
     #     max_retries=2,
     # )
-    llm = ChatYandexGPT(
-        folder_id=os.getenv("YC_FOLDER"),
-        temperature=0.3,
-        model_name="yandexgpt-5-lite"
-    )
+    llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-lite")
     # llm = ChatOllama(
     #     temperature=0.3,
     #     model="gemma3:270m"
@@ -50,13 +53,11 @@ def main():
 
     chain = prompt_template | llm
 
-    response = chain.invoke(input={
-        "information": information,
-        "task": task
-    })
+    response = chain.invoke(input={"information": information, "task": task})
 
     print("Response:")
     print(response.content)
+
 
 if __name__ == "__main__":
     main()
