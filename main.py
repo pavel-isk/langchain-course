@@ -27,7 +27,7 @@ tools = [
         include_domains=["hh.ru", "superjob.ru"],
     )
 ]
-llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-lite")
+llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-pro")
 # react_prompt = hub.pull("hwchase17/react")
 output_parser = PydanticOutputParser(pydantic_object=AgentResponse)
 react_prompt_with_format_instructions = PromptTemplate(
@@ -37,7 +37,9 @@ react_prompt_with_format_instructions = PromptTemplate(
 
 agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt_with_format_instructions)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-chain = agent_executor
+extract_output = RunnableLambda(lambda x: x["output"])
+parse_output = RunnableLambda(lambda x: output_parser.parse(x))
+chain = agent_executor | extract_output | parse_output
 
 
 def main():
@@ -46,7 +48,7 @@ def main():
     result = chain.invoke(
         input={
             "input": """
-            search for 3 Python Developer jobs in Moscow and list their titles and links.
+            search for 3 Python Developer jobs in Moscow.
             """,
         }
     )
