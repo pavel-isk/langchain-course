@@ -7,12 +7,13 @@ import os
 from dotenv import load_dotenv
 
 from langchain import hub
-from langchain_core.tools import tool
+# from langchain_core.tools import tool
 from langchain.agents import AgentExecutor
 from langchain.agents.react.agent import create_react_agent
 from langchain_community.chat_models import ChatYandexGPT
 from langchain_tavily import TavilySearch
-from langchain_core.prompts import PromptTemplate
+
+# from langchain_core.prompts import PromptTemplate
 
 
 load_dotenv()
@@ -21,23 +22,20 @@ load_dotenv()
 tools = [TavilySearch()]
 llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-lite")
 react_prompt = hub.pull("hwchase17/react")
-
+agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+chain = agent_executor
 
 def main():
     print("Starting Hello world project...")
 
-
-    task = "2 and 8"
-    template = "Multiple the following numbers using the multiply tool: {task}"
-    prompt_template = PromptTemplate(
-        template=template,
-        input_variables=["task"],
+    result = chain.invoke(
+        input={
+            "input": "search for 3 jobs for DevOps in Moscow, list their details and provide a summary"
+        }
     )
 
-
-    resp = llm.invoke([prompt_template.format(task=task)])
-    print("LLM output:", resp.content)
-
+    print("Final result:", result)
 
 if __name__ == "__main__":
     main()
