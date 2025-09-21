@@ -4,18 +4,20 @@ and generate responses based on a given prompt.
 """
 
 import os
+
 from dotenv import load_dotenv
-
-from langchain import hub
-
-# from langchain_core.tools import tool
 from langchain.agents import AgentExecutor
 from langchain.agents.react.agent import create_react_agent
 from langchain_community.chat_models import ChatYandexGPT
+
+# from langchain import hub
+from langchain_core.output_parsers.pydantic import PydanticOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
 from langchain_tavily import TavilySearch
 
-# from langchain_core.prompts import PromptTemplate
-
+from prompt import REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
+from schemas import AgentResponse
 
 load_dotenv()
 
@@ -26,8 +28,14 @@ tools = [
     )
 ]
 llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-lite")
-react_prompt = hub.pull("hwchase17/react")
-agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt)
+# react_prompt = hub.pull("hwchase17/react")
+output_parser = PydanticOutputParser(pydantic_object=AgentResponse)
+react_prompt_with_format_instructions = PromptTemplate(
+    template=REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS,
+    input_variables=["input", "agent_scratchpad", "tools", "tool_names", "format_instructions"],
+).partial(format_instructions=output_parser.get_format_instructions())
+
+agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt_with_format_instructions)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 chain = agent_executor
 
@@ -38,8 +46,7 @@ def main():
     result = chain.invoke(
         input={
             "input": """
-            search for 5 jobs for DevOps for AI products in Saint Petersburg where I can start working without significant ML and AI experience, 
-            list their details and provide links to them
+            search for 3 Python Developer jobs in Moscow and list their titles and links.
             """,
         }
     )
