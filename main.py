@@ -7,32 +7,20 @@ and generate responses based on a given prompt.
 import os
 # import json
 from dotenv import load_dotenv
-from prompt import GET_RATIONAL_THOUGHTS_PROMPT
 from langchain_core.prompts import PromptTemplate
-
-# from langchain_ollama import ChatOllama
 from langchain_community.chat_models import ChatYandexGPT
 
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# from langchain_core.messages import HumanMessage, SystemMessage
+from prompt import GET_RATIONAL_THOUGHTS_PROMPT
+from schemas import RationalThough, CognitiveMistakes, Attitude, AgentResponse
 
 
 load_dotenv()
 
 
-def main():
+def main(): # Make use of Pydantic schemas in your agent logic
     print("Starting Hello world project...")
 
-    # llm = ChatGoogleGenerativeAI(
-    #     model="gemini-2.5-flash",
-    #     temperature=0,
-    #     max_retries=2,
-    # )
-    llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-pro")
-    # llm = ChatOllama(
-    #     temperature=0.3,
-    #     model="gemma3:270m"
-    # )
+    llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.5, model_name="yandexgpt-5-pro")
 
     information = ""
     with open("data/app_data.json", "r", encoding="utf-8") as f:
