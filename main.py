@@ -76,7 +76,6 @@ def print_response(response: AgentResponse):
     for idx, mistake in enumerate(sorted_mistakes, 1):
         print(f"\033[38;5;208m{idx}. {mistake.name}: {mistake.explanation}\033[0m")
 
-    
     print(f"\033[91m Установки\033[0m")
     for idx, attitude in enumerate(response.attitudes, 1):
         print(f"\033[91m{idx}. {attitude.content}\033[0m")
@@ -84,10 +83,6 @@ def print_response(response: AgentResponse):
     print(f"\033[94m Рациональные мысли\033[0m")
     for idx, thought in enumerate(response.rationalization, 1):
         print(f"\033[94m{idx}. {thought.content}\033[0m")
-
-    print(f"\033[92m Позитивные моменты в ситуации\033[0m")
-    for idx, moment in enumerate(response.positivism, 1):
-        print(f"\033[92m{idx}. {moment.content}\033[0m")
 
 
 if __name__ == "__main__":
