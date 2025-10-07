@@ -6,54 +6,50 @@ and generate responses based on a given prompt.
 import os
 
 from dotenv import load_dotenv
-from langchain.agents import AgentExecutor
-from langchain.agents.react.agent import create_react_agent
-from langchain_community.chat_models import ChatYandexGPT
-
-# from langchain import hub
-from langchain_core.output_parsers.pydantic import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableLambda
-from langchain_tavily import TavilySearch
-
-from prompt import REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
-from schemas import AgentResponse
+from langchain_core.tools import tool
+from langchain_core.messages import HumanMessage, ToolMessage,  AIMessage
+# from langchain_community.chat_models import ChatYandexGPT
+from langchain_ollama import ChatOllama
 
 load_dotenv()
-
-
-tools = [
-    TavilySearch(
-        include_domains=["hh.ru", "superjob.ru"],
-    )
-]
-llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.3, model_name="yandexgpt-5-pro")
-# react_prompt = hub.pull("hwchase17/react")
-output_parser = PydanticOutputParser(pydantic_object=AgentResponse)
-react_prompt_with_format_instructions = PromptTemplate(
-    template=REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS,
-    input_variables=["input", "agent_scratchpad", "tools", "tool_names", "format_instructions"],
-).partial(format_instructions=output_parser.get_format_instructions())
-
-agent = create_react_agent(llm=llm, tools=tools, prompt=react_prompt_with_format_instructions)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-extract_output = RunnableLambda(lambda x: x["output"])
-parse_output = RunnableLambda(lambda x: output_parser.parse(x))
-chain = agent_executor | extract_output | parse_output
-
 
 def main():
     print("Starting Hello world project...")
 
-    result = chain.invoke(
-        input={
-            "input": """
-            search for 3 Python Developer jobs in Moscow.
-            """,
-        }
-    )
+    # llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0, model_name="yandexgpt-5-pro")
+    llm = ChatOllama(model="llama3.1:8b", temperature=0)
+    llm_with_tools = llm.bind_tools([count_characters])
+    messages = [
+        HumanMessage("How many characters are in the word 'Hello world'?")
+    ]
 
-    print("Final result:", result)
+    ai_message = llm_with_tools.invoke(messages)
+    print("AI response:", ai_message.content)
+    messages.append(ai_message)
+    
+    while ai_message.tool_calls:
+        for tool_call in ai_message.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            print(tool_call)
+            
+            if tool_name == "count_characters":
+                tool_result = count_characters.invoke(tool_args)
+                messages.append(ToolMessage(
+                    tool_result,
+                    tool_call_id=tool_call["id"],
+                ))
+                ai_message = llm_with_tools.invoke(messages)
+                print("AI response:", ai_message.content)
+
+    print("Final result:", ai_message.content)
+
+
+@tool
+def count_characters(text: str ="") -> int:
+    """Count the number of characters in a given text."""
+    print(f"Counting characters in: {text}")
+    return len(text)
 
 
 if __name__ == "__main__":
