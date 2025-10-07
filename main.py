@@ -19,7 +19,7 @@ def main():
 
     # llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0, model_name="yandexgpt-5-pro")
     # llm = ChatOllama(model="llama3.1:8b", temperature=0)
-    llm = GigaChat(credentials=os.getenv("GIGACHAT_CREDENTIALS"), temperature=0, model_name="giga-3.5-turbo", verify_ssl_certs=False)
+    llm = GigaChat(credentials=os.getenv("GIGACHAT_CREDENTIALS"), temperature=0, model_name="GigaChat-2", verify_ssl_certs=False)
     llm_with_tools = llm.bind_tools([count_characters])
     messages = [
         HumanMessage("How many characters are in the word 'Hello world'?")
