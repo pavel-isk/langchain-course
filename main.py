@@ -25,16 +25,11 @@ load_dotenv()
 
 def main():  # Make use of Pydantic schemas in your agent logic
     print("Starting simple RAG world project...")
-    # filename = "sample2.pdf"
-    # pdf_path = f"data/{filename}"
-    # documents = PyPDFLoader(pdf_path).load()
-    # print(f"Loaded {len(documents)} documents from {pdf_path}")
-    # text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=30, separator="\n")
-    # docs = text_splitter.split_documents(documents)
-    # print(f"Split into {len(docs)} chunks of text (max. 1000 characters each)")
 
     llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0, model_name="yandexgpt-5-pro")
     embeddings = YandexGPTEmbeddings(folder_id=os.getenv("YC_FOLDER"), iam_token=os.getenv("YC_API_KEY"))
+    # generate_vs_data("sample.pdf", embeddings)
+    # generate_vs_data("sample2.pdf", embeddings)
     
     # vectorstore = FAISS.from_documents(docs, embeddings)
     # vectorstore.save_local("faiss_index_sample2")
@@ -55,6 +50,21 @@ def main():  # Make use of Pydantic schemas in your agent logic
         {"input": input("Введи свой тупой вопрос: ")}
     )
     print(f"Ответ: {res['answer']}")
+
+
+def generate_vs_data(filename: str, embeddings) -> None:
+    pdf_path = f"data/{filename}"
+    documents = PyPDFLoader(pdf_path).load()
+    print(f"Loaded {len(documents)} documents from {pdf_path}")
+
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=30, separator="\n")
+    docs = text_splitter.split_documents(documents)
+    print(f"Split into {len(docs)} chunks of text (max. 1000 characters each)")
+
+    vectorstore = FAISS.from_documents(docs, embeddings)
+    index_path = f"faiss_index_{filename.split('.')[0]}"
+    vectorstore.save_local(f"data/{index_path}")
+    print(f"Vector store saved to data/{index_path}")
 
 if __name__ == "__main__":
     main()
