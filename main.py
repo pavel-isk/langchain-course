@@ -8,82 +8,53 @@ import os
 
 # import json
 from dotenv import load_dotenv
-from langchain_community.chat_models import ChatYandexGPT
-from langchain_core.output_parsers.pydantic import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableLambda
 
-from prompt import GET_RATIONAL_THOUGHTS_PROMPT
-from schemas import AgentResponse
+from langchain import hub
+from langchain_text_splitters import CharacterTextSplitter
+
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.chat_models import ChatYandexGPT
+from langchain_community.embeddings.yandex import YandexGPTEmbeddings
+from langchain_community.vectorstores import FAISS
+
+from langchain.chains.retrieval import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 
 load_dotenv()
 
 
 def main():  # Make use of Pydantic schemas in your agent logic
-    print("Starting Hello world project...")
+    print("Starting simple RAG world project...")
+    # filename = "sample2.pdf"
+    # pdf_path = f"data/{filename}"
+    # documents = PyPDFLoader(pdf_path).load()
+    # print(f"Loaded {len(documents)} documents from {pdf_path}")
+    # text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=30, separator="\n")
+    # docs = text_splitter.split_documents(documents)
+    # print(f"Split into {len(docs)} chunks of text (max. 1000 characters each)")
 
-    llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0.5, model_name="yandexgpt-5-pro")
-    output_parser = PydanticOutputParser(pydantic_object=AgentResponse)
-
-    information = load_app_data()
-    extract_output = RunnableLambda(lambda x: output_parser.parse(x.content))
-
-    template = GET_RATIONAL_THOUGHTS_PROMPT
-    prompt_template = PromptTemplate(
-        input_variables=["information", "user_case"],
-        template=template,
-    ).partial(
-        information=information,
-        format_instructions=output_parser.get_format_instructions(),
+    llm = ChatYandexGPT(folder_id=os.getenv("YC_FOLDER"), temperature=0, model_name="yandexgpt-5-pro")
+    embeddings = YandexGPTEmbeddings(folder_id=os.getenv("YC_FOLDER"), iam_token=os.getenv("YC_API_KEY"))
+    
+    # vectorstore = FAISS.from_documents(docs, embeddings)
+    # vectorstore.save_local("faiss_index_sample2")
+    vectorstore = FAISS.load_local(
+        # "data/faiss_index_sample", embeddings, allow_dangerous_deserialization=True
+        "data/faiss_index_sample2", embeddings, allow_dangerous_deserialization=True
     )
 
-    chain = prompt_template | llm | extract_output
-
-    user_case = {
-        # "Ситуация": input("Опиши ситуацию: "),
-        # "Мысли": input("Опиши мысли: "),
-        # "Эмоции": input("Опиши эмоции и их интенсивность по 10-бальной шкале: "),
-        # "Телесная реакция": input("Опиши телесную реакцию: "),
-        # "Поведение": input("Опиши поведение: "),
-        "Ситуация": "Я опоздал на работу, потому что проспал.",
-        "Мысли": "Я всегда опаздываю, я неорганизованный человек и меня уволят. Важно чтобы никто не узнал, что я опоздал.",
-        "Эмоции": "Тревога 8, стыд 7",
-        "Телесная реакция": "Сердцебиение, потливость, напряжение в плечах",
-        "Поведение": "Я быстро оделся и помчался на работу, не позвонив никому и не предупредив.",
-    }
-
-    user_case_str = "\n".join([f"{k}: {v}" for k, v in user_case.items()])
-    response = chain.invoke(input={"user_case": user_case_str})
-
-    print_response(response)
-
-
-def load_app_data():
-    information = ""
-    with open("data/app_data.json", "r", encoding="utf-8") as f:
-        information = f.read()
-    return information
-
-
-# Function that prints response in human readable format with colors
-def print_response(response: AgentResponse):
-    print("Response:")
-
-    print(f"\033[1;97m{response.summary}\033[0m")
-
-    sorted_mistakes = sorted(response.mistakes, key=lambda x: x.probability, reverse=True)
-    print(f"\033[38;5;208m Ошибки мышления\033[0m")
-    for idx, mistake in enumerate(sorted_mistakes, 1):
-        print(f"\033[38;5;208m{idx}. {mistake.name}: {mistake.explanation}\033[0m")
-
-    print(f"\033[91m Установки\033[0m")
-    for idx, attitude in enumerate(response.attitudes, 1):
-        print(f"\033[91m{idx}. {attitude.content}\033[0m")
-
-    print(f"\033[94m Рациональные мысли\033[0m")
-    for idx, thought in enumerate(response.rationalization, 1):
-        print(f"\033[94m{idx}. {thought.content}\033[0m")
-
+    retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
+    combine_docs_chain = create_stuff_documents_chain(
+        llm, retrieval_qa_chat_prompt
+    )
+    retrieval_chain = create_retrieval_chain(
+        vectorstore.as_retriever(), combine_docs_chain
+    )
+    
+    res = retrieval_chain.invoke(
+        {"input": input("Введи свой тупой вопрос: ")}
+    )
+    print(f"Ответ: {res['answer']}")
 
 if __name__ == "__main__":
     main()
