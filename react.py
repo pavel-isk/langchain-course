@@ -36,7 +36,7 @@ tools = [get_temperature, triple_tool]
 
 yc_folder = os.getenv("YC_FOLDER")
 yc_api_key = os.getenv("YC_API_KEY")
-model_name = os.getenv("YC_MODEL_NAME", "yandexgpt")
+model_name = os.getenv("YC_MODEL_NAME", "yandexgpt") # зацикливается с lite моделью
 yc_base_url = os.getenv("YC_BASE_URL", "https://llm.api.cloud.yandex.net/v1")
 
 print(f"Using model: {model_name}")

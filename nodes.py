@@ -5,7 +5,10 @@ from langgraph.prebuilt import ToolNode
 from react import llm, tools
 
 
-SYSTEM_MESSAGE = """Ты - ассистент, который помогает пользователю с разными задачами, используя инструменты."""
+SYSTEM_MESSAGE = """
+Ты - ассистент, который помогает пользователю найди температуру в городе и потом умножить её на 3.
+Используей данные тебе инструменты и потом верни ответ пользователю.
+"""
 
 def run_agent_reasoning(state: MessagesState) -> MessagesState:
     """Запускает агента с обоснованиеями в мышлении."""

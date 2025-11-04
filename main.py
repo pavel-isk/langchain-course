@@ -23,7 +23,10 @@ flow.add_node(AGENT_REASON, run_agent_reasoning)
 flow.set_entry_point(AGENT_REASON)
 flow.add_node(ACT, tool_node)
 
-flow.add_conditional_edges(AGENT_REASON, should_continue, {END:END, ACT:ACT})
+flow.add_conditional_edges(
+    AGENT_REASON,
+    should_continue, # возвращает END или ACT, то есть решает что делать после вызова агента
+    {END:END, ACT:ACT}) # в зависимости от полученной строки переходит к той или иной ноде
 flow.add_edge(ACT, AGENT_REASON)
 
 app = flow.compile()
