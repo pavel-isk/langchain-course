@@ -30,14 +30,12 @@ def yandex_gensearch_tool(query: str) -> dict:
     body = json.dumps(
         {
             "folderId": YC_FOLDER,
-            "searchType": "SEARCH_TYPE_COM",
             "messages": [
                 {
-                    "role": "ROLE_ASSISTANT",  # ROLE_USER or ROLE_UNSPECIFIED
+                    "role": "ROLE_USER",  # ROLE_USER or ROLE_UNSPECIFIED
                     "content": query,
                 }
             ],
-            "searchFilters": [{"lang": "ru"}],
         }
     )
 

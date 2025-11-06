@@ -4,8 +4,7 @@
 from dotenv import load_dotenv
 
 from langchain_core.messages import BaseMessage, ToolMessage, HumanMessage
-from langgraph.graph import END, StateGraph, MessagesState
-from langgraph.graph.message import add_messages
+from langgraph.graph import END, MessageGraph # StateGraph, MessagesState
 
 from chains import revisor, first_responder
 from tool_executor import execute_tools
@@ -28,7 +27,7 @@ def event_loop(state: list[BaseMessage]) -> str:
     return EXECUTE_TOOLS
 
 
-builder = StateGraph(MessagesState)
+builder = MessageGraph()
 
 
 builder.add_node(DRAFT, first_responder)
@@ -41,12 +40,9 @@ builder.add_edge(DRAFT, EXECUTE_TOOLS)
 builder.add_edge(EXECUTE_TOOLS, REVISE)
 builder.add_conditional_edges(REVISE, event_loop, path_map={END:END, EXECUTE_TOOLS:EXECUTE_TOOLS})
 
-graph = builder.compile()
-# graph.get_graph().draw_mermaid_png(output_file_path="data/reflexion_agent.png")
-
-
 print("Hello from LangGraph Reflexion Agent!")
-
 inputs = "Напиши научную статью о AI интрументах для медицины. Перечисли стартапы которые работают в этой сфере и уже получили финансирование."
+
+graph = builder.compile()
 response = graph.invoke(HumanMessage(content=inputs))
-print(response[LAST])
+print(response)

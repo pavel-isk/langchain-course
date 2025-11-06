@@ -1,3 +1,5 @@
+import time
+
 from dotenv import load_dotenv
 from yandex_search import yandex_gensearch_tool
 from langchain_core.tools import StructuredTool
@@ -9,7 +11,16 @@ load_dotenv()
 
 def run_queries(search_queries: list[str], **kwargs):
     """Запускает запросы на поиск в интернете."""
-    return yandex_gensearch_tool.batch([{"query": query} for query in search_queries])
+    results = []
+    for query in search_queries:
+        # Выполняем поиск для одного запроса
+        result = yandex_gensearch_tool.invoke({"query": query})
+        results.append(result)
+
+        # Добавляем задержку между запросами
+        time.sleep(1)
+
+    return results
 
 
 execute_tools = ToolNode(

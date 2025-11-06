@@ -51,7 +51,7 @@ first_responder_prompt_template = actor_prompt_template.partial(
 )
 
 first_responder = first_responder_prompt_template | llm.bind_tools(
-    tools=[AnswerQuestion], tool_choice="AnswerQuestion"  # set a tool to be always used by llm
+    tools=[AnswerQuestion], tool_choice=AnswerQuestion.__name__  # set a tool to be always used by llm
 )
 
 revise_instructions = """Обнови свой предыдущий ответ используя новую информацию.
@@ -63,7 +63,7 @@ revise_instructions = """Обнови свой предыдущий ответ �
   - Используй рецензию к предыдущему ответу, чтоб удалить лишнюю информацию и УБЕДИСЬ что ты добавил пропущенную информацию."""
 
 revisor = actor_prompt_template.partial(first_instruction=revise_instructions) | llm.bind_tools(
-    tools=[ReviseAnswer], tool_choice="ReviseAnswer"
+    tools=[AnswerQuestion ,ReviseAnswer], tool_choice=ReviseAnswer.__name__
 )
 
 if __name__ == "__main__":
