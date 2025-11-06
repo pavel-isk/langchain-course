@@ -22,6 +22,9 @@ def yandex_gensearch_tool(query: str) -> dict:
     Returns:
       - dict: словарь с "message" и "sources" ключами.
     """
+
+    print(f"Yandex Search Tool Started with {query}")
+
     headers = {"Authorization": f"Api-Key {YC_API_KEY}"}
 
     body = json.dumps(
